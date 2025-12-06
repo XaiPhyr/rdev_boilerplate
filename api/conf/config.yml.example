@@ -1,0 +1,10 @@
+env: 'dev'
+
+server:
+  host: 'localhost:8200'
+  endpoint: '/v1/api'
+  jwt_key: ''
+
+database:
+  dsn: ''
+  bundebug: true
