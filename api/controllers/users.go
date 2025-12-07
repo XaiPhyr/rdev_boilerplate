@@ -47,6 +47,7 @@ func (c UserController) Read(ctx *gin.Context) {
 		return
 	}
 
+ // move q.UUID to res.UUID
 	if q.UUID != "all" {
 		ctx.JSON(http.StatusOK, gin.H{"data": res.User})
 	} else {
