@@ -40,6 +40,7 @@ cd rdev_boilerplate
 ### 2. Install Dependencies
 
 ```bash
+cd api
 go mod tidy
 ```
 
