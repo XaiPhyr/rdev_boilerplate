@@ -39,16 +39,14 @@ func (c UserController) Upsert(ctx *gin.Context) {
 }
 
 func (c UserController) Read(ctx *gin.Context) {
-	q := c.sanitizeCtx(ctx)
-	res, err := c.u.Read(q)
+	uuid, res, err := c.u.Read(c.sanitizeCtx(ctx))
 
 	if err != nil {
 		c.handleError(ctx, err, c.cleanErr(err))
 		return
 	}
 
- // move q.UUID to res.UUID
-	if q.UUID != "all" {
+	if uuid != "all" {
 		ctx.JSON(http.StatusOK, gin.H{"data": res.User})
 	} else {
 		ctx.JSON(http.StatusOK, gin.H{"total": res.Count, "data": res.Users})

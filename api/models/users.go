@@ -72,7 +72,7 @@ func (m User) Upsert(ctx *gin.Context, user User) (int, User, error) {
 	return httpStatus, user, err
 }
 
-func (m User) Read(qp QueryParams) (res UserResults, err error) {
+func (m User) Read(qp QueryParams) (uuid string, res UserResults, err error) {
 	var coalesceColumns = []string{}
 
 	var allowedSortFields = map[string]bool{
@@ -85,7 +85,7 @@ func (m User) Read(qp QueryParams) (res UserResults, err error) {
 	q := db.NewSelect()
 
 	if qp.UUID != "all" {
-		return res, q.Model(&res.User).Where("uuid = ?", qp.UUID).Scan(qp.Ctx, &res.User)
+		return qp.UUID, res, q.Model(&res.User).Where("uuid = ?", qp.UUID).Scan(qp.Ctx, &res.User)
 	}
 
 	q = q.Model(&res.Users)
@@ -93,7 +93,7 @@ func (m User) Read(qp QueryParams) (res UserResults, err error) {
 	q = applyGlobalFilterExt(q, qp.FilterExtOp, qp.FilterExt)
 
 	res.Count, err = q.ScanAndCount(qp.Ctx)
-	return res, err
+	return qp.UUID, res, err
 }
 
 func (m User) Delete(ctx *gin.Context, uuid string) (deletedAt time.Time, msg string, err error) {
