@@ -7,32 +7,6 @@ import (
 	"github.com/uptrace/bun"
 )
 
-type (
-	User struct {
-		bun.BaseModel `bun:"table:users,alias:u"`
-		AppModel
-
-		Username   string          `bun:"username" json:"username"`
-		Password   string          `bun:"password" json:"-"`
-		Email      string          `bun:"email,unique" json:"email"`
-		FirstName  *string         `bun:"first_name,nullzero,default:null" json:"first_name"`
-		MiddleName *string         `bun:"middle_name,nullzero,default:null" json:"middle_name"`
-		LastName   *string         `bun:"last_name,nullzero,default:null" json:"last_name"`
-		Mobile     *string         `bun:"mobile,unique,nullzero,default:null" json:"mobile"`
-		Address    *map[string]any `bun:"address,type:jsonb" json:"address"`
-		Optin      bool            `bun:"optin,default:false" json:"optin"`
-		LastLogin  time.Time       `bun:"last_login,nullzero,default:null" json:"last_login,omitzero"`
-		Metadata   *map[string]any `bun:"metadata,type:jsonb,default:null" json:"metadata"`
-		IsAdmin    bool            `bun:"is_admin" json:"is_admin"`
-	}
-
-	UserResults struct {
-		User  User   `json:"user,omitempty"`
-		Users []User `json:"users,omitempty"`
-		Count int    `json:"count,omitempty"`
-	}
-)
-
 func (m User) Upsert(ctx *gin.Context, user User) (int, User, error) {
 	var oldData *User
 	httpStatus, action := 201, "POST"
@@ -69,29 +43,16 @@ func (m User) Upsert(ctx *gin.Context, user User) (int, User, error) {
 }
 
 func (m User) Read(qp QueryParams) (res UserResults, err error) {
-	var coalesceCols = []string{
-		"username",
-		"first_name",
-		"middle_name",
-		"last_name",
-	}
-
-	var allowedFields = map[string]bool{
-		"id":         true,
-		"username":   true,
-		"email":      true,
-		"created_at": true,
-	}
+	var coalesceCols = []string{"username", "first_name", "middle_name", "last_name"}
+	var allowedSortFields = map[string]bool{"id": true, "username": true, "email": true, "created_at": true}
 
 	q := db.NewSelect()
 
 	if qp.UUID != "all" {
-		return res, q.Model(&res.User).Where("uuid = ?", qp.UUID).Scan(qp.Ctx, &res.User)
+		return res, q.Model(&res.User).Where("uuid = ?", qp.UUID).Scan(qp.Ctx)
 	}
 
-	q = q.Model(&res.Users)
-	q = sanitizeQuery(q, qp, coalesceCols, allowedFields)
-
+	q = sanitizeQuery(q.Model(&res.Users), qp, coalesceCols, allowedSortFields)
 	res.Count, err = q.ScanAndCount(qp.Ctx)
 	return res, err
 }
