@@ -7,7 +7,7 @@ import (
 	"github.com/uptrace/bun"
 )
 
-func (m User) Upsert(ctx *gin.Context, user User) (int, User, error) {
+func (m User) Upsert(ctx *gin.Context, item User) (int, User, error) {
 	var oldData *User
 	httpStatus, action := 201, "POST"
 
@@ -25,21 +25,21 @@ func (m User) Upsert(ctx *gin.Context, user User) (int, User, error) {
 		"updated_at",
 	}
 
-	if user.UUID != "" {
+	if item.UUID != "" {
 		var tmp User
-		if err := db.NewSelect().Model(&tmp).Where("uuid = ?", user.UUID).Scan(ctx); err == nil {
+		if err := db.NewSelect().Model(&tmp).Where("uuid = ?", item.UUID).Scan(ctx); err == nil {
 			httpStatus, action, oldData = 200, "PUT", &tmp
 		}
 	}
 
 	setClause := parseSetClause(setClauseColumns)
 	err := executeTransaction(ctx, func(trx *bun.Tx) error {
-		_, err := trx.NewInsert().Model(&user).On("CONFLICT (uuid) DO UPDATE").Set(setClause).Exec(ctx)
+		_, err := trx.NewInsert().Model(&item).On("CONFLICT (uuid) DO UPDATE").Set(setClause).Exec(ctx)
 		return err
 	})
 
-	go auditLog(ctx, oldData, user, user.ID, "user", action, err)
-	return httpStatus, user, err
+	go auditLog(ctx, oldData, item, item.ID, "user", action, err)
+	return httpStatus, item, err
 }
 
 func (m User) Read(qp QueryParams) (res UserResults, err error) {
