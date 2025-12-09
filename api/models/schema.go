@@ -78,6 +78,22 @@ type (
 		AppModel
 	}
 
+	UserRoleResults struct {
+		UserRole  UserRole
+		UserRoles []UserRole
+		Count     int
+	}
+
+	UserRole struct {
+		bun.BaseModel `bun:"table:user_roles,alias:ur"`
+
+		ID     int64 `bun:"id,pk,autoincrement" json:"id"`
+		UserID int64 `bun:"user_id" json:"user_id"`
+		RoleID int64 `bun:"role_id" json:"role_id"`
+
+		AppModel
+	}
+
 	RoleResults struct {
 		Role  Role
 		Roles []Role
