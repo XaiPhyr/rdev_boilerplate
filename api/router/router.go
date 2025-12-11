@@ -21,4 +21,7 @@ func InitRouters(router *gin.Engine) {
 
 	var permission = controllers.PermissionController{}
 	permission.InitPermissionController(router)
+
+	var group = controllers.GroupController{}
+	group.InitGroupController(router)
 }
