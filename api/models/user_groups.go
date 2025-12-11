@@ -64,14 +64,14 @@ func (m UserGroup) Read(qp QueryParams) (res UserGroupResults, err error) {
 }
 
 func (m UserGroup) Delete(ctx *gin.Context, uuid string) (deletedAt time.Time, msg string, err error) {
-	id, deletedAt, msg, err := softDelete(ctx, "user_groups", uuid)
+	id, deletedAt, _, msg, err := setStatus(ctx, "user_groups", uuid, "deleted_at")
 
 	go auditLog(ctx, nil, map[string]string{"deleted_at": deletedAt.String()}, id, "user_group", "DELETE", err)
 	return
 }
 
 func (m UserGroup) UpdateStatus(ctx *gin.Context, uuid string) (status, msg string, err error) {
-	id, status, msg, err := updateStatus(ctx, "user_groups", uuid)
+	id, _, status, msg, err := setStatus(ctx, "user_groups", uuid, "status")
 
 	go auditLog(ctx, nil, map[string]string{"status": status}, id, "user_group", "PATCH", err)
 	return

@@ -64,14 +64,14 @@ func (m Role) Read(qp QueryParams) (res RoleResults, err error) {
 }
 
 func (m Role) Delete(ctx *gin.Context, uuid string) (deletedAt time.Time, msg string, err error) {
-	id, deletedAt, msg, err := softDelete(ctx, "roles", uuid)
+	id, deletedAt, _, msg, err := setStatus(ctx, "roles", uuid, "deleted_at")
 
 	go auditLog(ctx, nil, map[string]string{"deleted_at": deletedAt.String()}, id, "role", "DELETE", err)
 	return
 }
 
 func (m Role) UpdateStatus(ctx *gin.Context, uuid string) (status, msg string, err error) {
-	id, status, msg, err := updateStatus(ctx, "roles", uuid)
+	id, _, status, msg, err := setStatus(ctx, "roles", uuid, "status")
 
 	go auditLog(ctx, nil, map[string]string{"status": status}, id, "role", "PATCH", err)
 	return

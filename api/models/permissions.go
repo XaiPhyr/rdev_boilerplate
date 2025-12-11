@@ -64,14 +64,14 @@ func (m Permission) Read(qp QueryParams) (res PermissionResults, err error) {
 }
 
 func (m Permission) Delete(ctx *gin.Context, uuid string) (deletedAt time.Time, msg string, err error) {
-	id, deletedAt, msg, err := softDelete(ctx, "permissions", uuid)
+	id, deletedAt, _, msg, err := setStatus(ctx, "permissions", uuid, "deleted_at")
 
 	go auditLog(ctx, nil, map[string]string{"deleted_at": deletedAt.String()}, id, "permission", "DELETE", err)
 	return
 }
 
 func (m Permission) UpdateStatus(ctx *gin.Context, uuid string) (status, msg string, err error) {
-	id, status, msg, err := updateStatus(ctx, "permissions", uuid)
+	id, _, status, msg, err := setStatus(ctx, "permissions", uuid, "status")
 
 	go auditLog(ctx, nil, map[string]string{"status": status}, id, "permission", "PATCH", err)
 	return

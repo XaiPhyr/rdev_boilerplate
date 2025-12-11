@@ -190,55 +190,43 @@ func auditLog(ctx *gin.Context, beforeDataChange, afterDataChange any, moduleId 
 	}
 }
 
-// @todo combine functions softDelete updateStatus into one generic
-func softDelete(ctx *gin.Context, tableName, uuid string) (id int64, deletedAt time.Time, msg string, err error) {
+func setStatus(ctx *gin.Context, tableName, uuid, field string) (id int64, deletedAt time.Time, status, msg string, err error) {
 	var temp struct {
 		ID        int64     `bun:"id"`
+		Status    string    `bun:"status" json:"status"`
 		DeletedAt time.Time `bun:"deleted_at" json:"deleted_at"`
 	}
 
-	err = executeTransaction(ctx, func(trx *bun.Tx) error {
-		_, err := trx.NewUpdate().
-			Table(tableName).
-			Where("uuid = ?", uuid).
-			Set("deleted_at = CASE WHEN deleted_at IS NULL THEN NOW() ELSE NULL END").
-			Returning("deleted_at, id").
-			Exec(ctx, &temp)
-		return err
-	})
-
-	id = temp.ID
-	msg = "restored successfully"
-	if !temp.DeletedAt.IsZero() {
-		deletedAt = temp.DeletedAt
-		msg = "deleted successfully"
-	}
-
-	return
-}
-
-func updateStatus(ctx *gin.Context, tableName, uuid string) (id int64, status, msg string, err error) {
-	var temp struct {
-		ID     int64  `bun:"id"`
-		Status string `bun:"status" json:"status"`
+	setQuery := "status = CASE WHEN status = 'O' THEN 'V' ELSE 'O' END"
+	if field == "deleted_at" {
+		setQuery = "deleted_at = CASE WHEN deleted_at IS NULL THEN NOW() ELSE NULL END"
 	}
 
 	err = executeTransaction(ctx, func(trx *bun.Tx) error {
 		_, err := trx.NewUpdate().
 			Table(tableName).
 			Where("uuid = ?", uuid).
-			Set("status = CASE WHEN status = 'O' THEN 'V' ELSE 'O' END").
-			Returning("status, id").
+			Set(setQuery).
+			Returning("deleted_at, status, id").
 			Exec(ctx, &temp)
 		return err
 	})
 
 	id = temp.ID
+
 	status = "O"
 	msg = "status restored successfully"
 	if temp.Status == "V" {
 		status = temp.Status
 		msg = "status archived successfully"
+	}
+
+	if field == "deleted_at" {
+		msg = "restored successfully"
+		if !temp.DeletedAt.IsZero() {
+			deletedAt = temp.DeletedAt
+			msg = "deleted successfully"
+		}
 	}
 
 	return

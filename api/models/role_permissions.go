@@ -64,14 +64,14 @@ func (m RolePermission) Read(qp QueryParams) (res RolePermissionResults, err err
 }
 
 func (m RolePermission) Delete(ctx *gin.Context, uuid string) (deletedAt time.Time, msg string, err error) {
-	id, deletedAt, msg, err := softDelete(ctx, "role_permissions", uuid)
+	id, deletedAt, _, msg, err := setStatus(ctx, "role_permissions", uuid, "deleted_at")
 
 	go auditLog(ctx, nil, map[string]string{"deleted_at": deletedAt.String()}, id, "role_permission", "DELETE", err)
 	return
 }
 
 func (m RolePermission) UpdateStatus(ctx *gin.Context, uuid string) (status, msg string, err error) {
-	id, status, msg, err := updateStatus(ctx, "role_permissions", uuid)
+	id, _, status, msg, err := setStatus(ctx, "role_permissions", uuid, "status")
 
 	go auditLog(ctx, nil, map[string]string{"status": status}, id, "role_permission", "PATCH", err)
 	return
