@@ -11,6 +11,7 @@ This repository offers a streamlined boilerplate for creating a RESTful API usin
 - Example **UPSERT**, **READ**, and **DELETE** operations for a resource
 - Environment-based configuration management using `yml` file
 - **Role-Based Access Control (RBAC)** for user roles and permissions management
+  - Includes **Group Access Control** for user grouping and role-specific permissions
 - Rate limiting middleware to control request throughput per client
 
 ## Tech Stack
