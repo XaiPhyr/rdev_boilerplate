@@ -30,6 +30,7 @@ type (
 		LastLogin  time.Time       `bun:"last_login,nullzero,default:null" json:"last_login,omitzero"`
 		Metadata   *map[string]any `bun:"metadata,type:jsonb,default:null" json:"metadata"`
 		IsAdmin    bool            `bun:"is_admin" json:"is_admin"`
+		IsOnline   bool            `bun:"is_online" json:"is_online"`
 
 		Permissions []string `bun:"-" json:"permissions,omitempty"`
 		AppModel

@@ -13,6 +13,7 @@ CREATE TABLE IF NOT EXISTS users (
   last_login timestamptz,
   metadata jsonb,
   is_admin boolean not null default false,
+  is_online boolean not null default false,
   active boolean not null default true,
   status varchar(1) not null default 'O',
   flag varchar(45),
