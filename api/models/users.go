@@ -18,7 +18,7 @@ type (
 		bun.BaseModel `bun:"table:users,alias:u"`
 
 		ID         int64           `bun:"id,pk,autoincrement" json:"id"`
-		Username   string          `bun:"username" json:"username"`
+		Username   string          `bun:"username,unique" json:"username"`
 		Password   string          `bun:"password" json:"-"`
 		Email      string          `bun:"email,unique" json:"email"`
 		FirstName  *string         `bun:"first_name,nullzero,default:null" json:"first_name"`

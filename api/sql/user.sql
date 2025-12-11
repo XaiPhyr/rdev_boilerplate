@@ -1,7 +1,7 @@
 -- Users table
 CREATE TABLE IF NOT EXISTS users (
   id bigserial primary key,
-  username varchar(45),
+  username varchar(45) unique,
   password varchar(255),
   email varchar(255) unique,
   first_name varchar(255),
