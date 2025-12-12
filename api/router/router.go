@@ -7,6 +7,9 @@ import (
 )
 
 func InitRouters(router *gin.Engine) {
+	var authentication = controllers.AuthenticationController{}
+	authentication.InitUserController(router)
+
 	var user = controllers.UserController{}
 	user.InitUserController(router)
 

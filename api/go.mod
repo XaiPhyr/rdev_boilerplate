@@ -4,6 +4,7 @@ go 1.25.5
 
 require (
 	github.com/gin-gonic/gin v1.11.0
+	github.com/golang-jwt/jwt/v5 v5.3.0
 	golang.org/x/time v0.12.0
 	gopkg.in/yaml.v2 v2.4.0
 )
