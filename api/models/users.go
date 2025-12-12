@@ -81,8 +81,10 @@ func (m User) Read(qp QueryParams) (res UserResults, err error) {
 	if qp.UUID != "all" {
 		err = q.Model(&res.User).Where("u.uuid = ?", qp.UUID).Scan(qp.Ctx)
 
-		if permissions, err := getPermissions(qp.Ctx, qp.UUID); err == nil {
-			res.User.Permissions = permissions
+		if err == nil {
+			if permissions, err := getPermissions(qp.Ctx, qp.UUID); err == nil {
+				res.User.Permissions = permissions
+			}
 		}
 
 		return res, err

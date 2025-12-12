@@ -35,10 +35,12 @@ func SetLoggers(router *gin.Engine) {
 }
 
 func (m Middleware) Authenticate(ctx *gin.Context) {
-	ctx.Set("userId", 1)
 	m.rateLimiter(ctx)
 
+	ctx.Set("userId", 1)
+
 	// @todo JWT LOGIC
+	ctx.Next()
 }
 
 func (m Middleware) CheckPermission(module string, perm ...string) gin.HandlerFunc {
@@ -53,18 +55,18 @@ func (m Middleware) CheckPermission(module string, perm ...string) gin.HandlerFu
 			Permissions []string `bun:"permissions" json:"permissions"`
 		}
 
-		err := utils.GetPermissions(func(sq *bun.SelectQuery) *bun.SelectQuery {
+		utils.GetPermissions(func(sq *bun.SelectQuery) *bun.SelectQuery {
 			return sq.Column("u.*").Group("u.id")
 		}, ctx.GetHeader("UserUUID"), ctx, &userPerm)
 
-		if err != nil {
-			ctx.JSON(http.StatusForbidden, gin.H{"error": "User does not exist.", "details": err.Error()})
+		if userPerm.ID == 0 {
+			ctx.JSON(http.StatusNotFound, gin.H{"error": "Your account has either been deleted or archived; please contact support for more information or assistance."})
 			ctx.Abort()
 			return
 		}
 
 		if !m.checkPerm(items, userPerm.Permissions, userPerm.IsAdmin) {
-			ctx.JSON(http.StatusForbidden, gin.H{"error": "Forbidden: You do not have permission.", "data": userPerm})
+			ctx.JSON(http.StatusForbidden, gin.H{"error": "You do not have permission.", "data": userPerm})
 			ctx.Abort()
 			return
 		}
@@ -98,6 +100,4 @@ func (m Middleware) rateLimiter(ctx *gin.Context) {
 		ctx.Abort()
 		return
 	}
-
-	ctx.Next()
 }

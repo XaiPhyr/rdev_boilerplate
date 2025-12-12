@@ -64,5 +64,5 @@ func (c *AppController) cleanErr(err error) string {
 }
 
 func (c *AppController) handleError(ctx *gin.Context, err error, message string) {
-	ctx.JSON(http.StatusBadRequest, gin.H{"error": message, "details": err.Error()})
+	ctx.JSON(http.StatusNotFound, gin.H{"error": message, "details": err.Error()})
 }
