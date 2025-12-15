@@ -249,17 +249,3 @@ func validateField(allowedSortFields map[string]bool, sortField string) bool {
 
 	return allowedSortFields[after]
 }
-
-func getPermissions(ctx *gin.Context, uuid string) ([]string, error) {
-	var perms struct {
-		Permissions []string `bun:"permissions"`
-	}
-
-	err := utils.GetPermissions(nil, uuid, ctx, &perms)
-
-	if len(perms.Permissions) == 0 {
-		return nil, err
-	}
-
-	return perms.Permissions, nil
-}

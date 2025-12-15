@@ -1,6 +1,7 @@
 package models
 
 import (
+	"api/utils"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -79,13 +80,17 @@ func (m User) Read(qp QueryParams) (res UserResults, err error) {
 	q := db.NewSelect()
 
 	if qp.UUID != "all" {
-		err = q.Model(&res.User).Where("u.uuid = ?", qp.UUID).Scan(qp.Ctx)
-
-		if err == nil {
-			if permissions, err := getPermissions(qp.Ctx, qp.UUID); err == nil {
-				res.User.Permissions = permissions
-			}
+		var userPerm struct {
+			User
+			Permissions []string `bun:"permissions" json:"permissions"`
 		}
+
+		utils.GetPermissions(func(sq *bun.SelectQuery) *bun.SelectQuery {
+			return sq.Column("u.*").Group("u.id")
+		}, qp.UUID, qp.Ctx, &userPerm)
+
+		res.User = userPerm.User
+		res.User.Permissions = userPerm.Permissions
 
 		return res, err
 	}
