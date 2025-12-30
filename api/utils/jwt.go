@@ -126,9 +126,9 @@ func HandlePassword(action, password, hashedPassword string) (string, error) {
 }
 
 func SetCooke(ctx *gin.Context, jwt *Tokens) {
-	ctx.SetCookie("access_token", jwt.AccessToken, 900, "/", "localhost", false, true)
-	ctx.SetCookie("refresh_token", jwt.RefreshToken, 3600, "/", "localhost", false, true)
-	ctx.SetCookie("uuid", jwt.UUID, 0, "/", "localhost", false, true)
+	ctx.SetCookie("access_token", jwt.AccessToken, 900, cfg.Server.Path, cfg.Server.Domain, false, true)
+	ctx.SetCookie("refresh_token", jwt.RefreshToken, 3600, cfg.Server.Path, cfg.Server.Domain, false, true)
+	ctx.SetCookie("uuid", jwt.UUID, 0, cfg.Server.Path, cfg.Server.Domain, false, true)
 }
 
 func registerToken(duration time.Duration, uuid, username string) (claims *JwtClaim) {

@@ -27,6 +27,8 @@ type (
 		Host     string `yaml:"host"`
 		Endpoint string `yaml:"endpoint"`
 		JwtKey   string `yaml:"jwt_key"`
+		Domain   string `yaml:"domain"`
+		Path     string `yaml:"path"`
 	}
 
 	DatabaseConfig struct {
