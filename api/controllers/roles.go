@@ -47,11 +47,13 @@ func (c RoleController) Read(ctx *gin.Context) {
 		return
 	}
 
+	data := gin.H{"total": res.Count, "data": res.Roles}
+
 	if ctx.Param("uuid") != "all" {
-		ctx.JSON(http.StatusOK, gin.H{"data": res.Role})
-	} else {
-		ctx.JSON(http.StatusOK, gin.H{"total": res.Count, "data": res.Roles})
+		data = gin.H{"data": res.Role}
 	}
+
+	ctx.JSON(http.StatusOK, data)
 }
 
 func (c RoleController) Delete(ctx *gin.Context) {

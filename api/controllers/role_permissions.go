@@ -47,11 +47,13 @@ func (c RolePermissionController) Read(ctx *gin.Context) {
 		return
 	}
 
+	data := gin.H{"total": res.Count, "data": res.RolePermissions}
+
 	if ctx.Param("uuid") != "all" {
-		ctx.JSON(http.StatusOK, gin.H{"data": res.RolePermission})
-	} else {
-		ctx.JSON(http.StatusOK, gin.H{"total": res.Count, "data": res.RolePermissions})
+		data = gin.H{"data": res.RolePermission}
 	}
+
+	ctx.JSON(http.StatusOK, data)
 }
 
 func (c RolePermissionController) Delete(ctx *gin.Context) {
