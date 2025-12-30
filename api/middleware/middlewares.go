@@ -37,7 +37,16 @@ func SetLoggers(router *gin.Engine) {
 func (m Middleware) Authenticate(ctx *gin.Context) {
 	m.rateLimiter(ctx)
 
-	if err := utils.VerifyJWT(ctx.GetHeader("Authorization"), ctx.GetHeader("UserUUID")); err != nil {
+	accessToken, err := ctx.Cookie("access_token")
+	userUUID, err := ctx.Cookie("uuid")
+
+	if err != nil {
+		ctx.JSON(http.StatusUnauthorized, gin.H{"error": err.Error()})
+		ctx.Abort()
+		return
+	}
+
+	if err := utils.VerifyJWT(accessToken, userUUID); err != nil {
 		// @todo frontend will call refresh token
 		ctx.JSON(http.StatusUnauthorized, gin.H{"error": err.Error()})
 		ctx.Abort()
@@ -60,8 +69,16 @@ func (m Middleware) CheckPermission(module string, perm ...string) gin.HandlerFu
 			Permissions []string `bun:"permissions" json:"permissions"`
 		}
 
+		userUUID, err := ctx.Cookie("uuid")
+
+		if err != nil {
+			ctx.JSON(http.StatusUnauthorized, gin.H{"error": err.Error()})
+			ctx.Abort()
+			return
+		}
+
 		utils.GetPermissions(func(sq *bun.SelectQuery) *bun.SelectQuery {
-			return sq.Where("u.uuid = ?", ctx.GetHeader("UserUUID"))
+			return sq.Where("u.uuid = ?", userUUID)
 		}, ctx, &userPerm)
 
 		if userPerm.ID == 0 {
