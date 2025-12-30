@@ -8,12 +8,6 @@ import (
 )
 
 type (
-	GroupPermissionResults struct {
-		GroupPermission  GroupPermission
-		GroupPermissions []GroupPermission
-		Count            int
-	}
-
 	GroupPermission struct {
 		bun.BaseModel `bun:"table:group_permissions,alias:gp"`
 
@@ -48,18 +42,29 @@ func (m GroupPermission) Upsert(ctx *gin.Context, item GroupPermission) (int, Gr
 	return httpStatus, item, err
 }
 
-func (m GroupPermission) Read(qp QueryParams) (res GroupPermissionResults, err error) {
+func (m GroupPermission) Read(qp QueryParams) (res Results, err error) {
 	var coalesceCols = []string{}
 	var allowedSortFields = map[string]bool{}
 
 	q := db.NewSelect()
 
 	if qp.UUID != "all" {
-		return res, q.Model(&res.GroupPermission).Where("uuid = ?", qp.UUID).Scan(qp.Ctx)
+		var data Group
+		err = q.Model(&data).Where("uuid = ?", qp.UUID).Scan(qp.Ctx)
+
+		res.Item = data
+
+		return res, err
 	}
 
-	q = sanitizeQuery(q.Model(&res.GroupPermissions), qp, coalesceCols, allowedSortFields)
+	var data []Group
+	q = sanitizeQuery(q.Model(&data), qp, coalesceCols, allowedSortFields)
 	res.Count, err = q.ScanAndCount(qp.Ctx)
+
+	for _, item := range data {
+		res.Items = append(res.Items, item)
+	}
+
 	return res, err
 }
 

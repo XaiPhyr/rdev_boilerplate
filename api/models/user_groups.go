@@ -8,12 +8,6 @@ import (
 )
 
 type (
-	UserGroupResults struct {
-		UserGroup  UserGroup
-		UserGroups []UserGroup
-		Count      int
-	}
-
 	UserGroup struct {
 		bun.BaseModel `bun:"table:user_groups,alias:ug"`
 
@@ -48,18 +42,29 @@ func (m UserGroup) Upsert(ctx *gin.Context, item UserGroup) (int, UserGroup, err
 	return httpStatus, item, err
 }
 
-func (m UserGroup) Read(qp QueryParams) (res UserGroupResults, err error) {
+func (m UserGroup) Read(qp QueryParams) (res Results, err error) {
 	var coalesceCols = []string{}
 	var allowedSortFields = map[string]bool{}
 
 	q := db.NewSelect()
 
 	if qp.UUID != "all" {
-		return res, q.Model(&res.UserGroup).Where("uuid = ?", qp.UUID).Scan(qp.Ctx)
+		var data UserGroup
+		err = q.Model(&data).Where("uuid = ?", qp.UUID).Scan(qp.Ctx)
+
+		res.Item = data
+
+		return res, err
 	}
 
-	q = sanitizeQuery(q.Model(&res.UserGroups), qp, coalesceCols, allowedSortFields)
+	var data []UserGroup
+	q = sanitizeQuery(q.Model(&data), qp, coalesceCols, allowedSortFields)
 	res.Count, err = q.ScanAndCount(qp.Ctx)
+
+	for _, item := range data {
+		res.Items = append(res.Items, item)
+	}
+
 	return res, err
 }
 

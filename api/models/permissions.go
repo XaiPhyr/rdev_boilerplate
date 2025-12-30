@@ -8,12 +8,6 @@ import (
 )
 
 type (
-	PermissionResults struct {
-		Permission  Permission
-		Permissions []Permission
-		Count       int
-	}
-
 	Permission struct {
 		bun.BaseModel `bun:"table:permissions,alias:p"`
 
@@ -48,18 +42,29 @@ func (m Permission) Upsert(ctx *gin.Context, item Permission) (int, Permission, 
 	return httpStatus, item, err
 }
 
-func (m Permission) Read(qp QueryParams) (res PermissionResults, err error) {
+func (m Permission) Read(qp QueryParams) (res Results, err error) {
 	var coalesceCols = []string{"name"}
 	var allowedSortFields = map[string]bool{"name": true}
 
 	q := db.NewSelect()
 
 	if qp.UUID != "all" {
-		return res, q.Model(&res.Permission).Where("uuid = ?", qp.UUID).Scan(qp.Ctx)
+		var data Role
+		err = q.Model(&data).Where("uuid = ?", qp.UUID).Scan(qp.Ctx)
+
+		res.Item = data
+
+		return res, err
 	}
 
-	q = sanitizeQuery(q.Model(&res.Permissions), qp, coalesceCols, allowedSortFields)
+	var data []Role
+	q = sanitizeQuery(q.Model(&data), qp, coalesceCols, allowedSortFields)
 	res.Count, err = q.ScanAndCount(qp.Ctx)
+
+	for _, item := range data {
+		res.Items = append(res.Items, item)
+	}
+
 	return res, err
 }
 

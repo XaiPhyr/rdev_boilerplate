@@ -57,6 +57,12 @@ type (
 		UserAgent        string    `bun:"user_agent" json:"user_agent"`
 		CreatedAt        time.Time `bun:"created_at,notnull,default:current_timestamp" json:"created_at,omitzero"`
 	}
+
+	Results struct {
+		Item  any
+		Items []any
+		Count int
+	}
 )
 
 var db = utils.InitDB()

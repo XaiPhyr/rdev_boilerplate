@@ -8,12 +8,6 @@ import (
 )
 
 type (
-	RolePermissionResults struct {
-		RolePermission  RolePermission
-		RolePermissions []RolePermission
-		Count           int
-	}
-
 	RolePermission struct {
 		bun.BaseModel `bun:"table:role_permissions,alias:rp"`
 
@@ -48,18 +42,29 @@ func (m RolePermission) Upsert(ctx *gin.Context, item RolePermission) (int, Role
 	return httpStatus, item, err
 }
 
-func (m RolePermission) Read(qp QueryParams) (res RolePermissionResults, err error) {
+func (m RolePermission) Read(qp QueryParams) (res Results, err error) {
 	var coalesceCols = []string{}
 	var allowedSortFields = map[string]bool{}
 
 	q := db.NewSelect()
 
 	if qp.UUID != "all" {
-		return res, q.Model(&res.RolePermission).Where("uuid = ?", qp.UUID).Scan(qp.Ctx)
+		var data Role
+		err = q.Model(&data).Where("uuid = ?", qp.UUID).Scan(qp.Ctx)
+
+		res.Item = data
+
+		return res, err
 	}
 
-	q = sanitizeQuery(q.Model(&res.RolePermissions), qp, coalesceCols, allowedSortFields)
+	var data []Role
+	q = sanitizeQuery(q.Model(&data), qp, coalesceCols, allowedSortFields)
 	res.Count, err = q.ScanAndCount(qp.Ctx)
+
+	for _, item := range data {
+		res.Items = append(res.Items, item)
+	}
+
 	return res, err
 }
 

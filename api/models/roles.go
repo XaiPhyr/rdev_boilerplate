@@ -8,12 +8,6 @@ import (
 )
 
 type (
-	RoleResults struct {
-		Role  Role
-		Roles []Role
-		Count int
-	}
-
 	Role struct {
 		bun.BaseModel `bun:"table:roles,alias:r"`
 
@@ -48,18 +42,29 @@ func (m Role) Upsert(ctx *gin.Context, item Role) (int, Role, error) {
 	return httpStatus, item, err
 }
 
-func (m Role) Read(qp QueryParams) (res RoleResults, err error) {
+func (m Role) Read(qp QueryParams) (res Results, err error) {
 	var coalesceCols = []string{"name"}
 	var allowedSortFields = map[string]bool{"name": true}
 
 	q := db.NewSelect()
 
 	if qp.UUID != "all" {
-		return res, q.Model(&res.Role).Where("uuid = ?", qp.UUID).Scan(qp.Ctx)
+		var data Role
+		err = q.Model(&data).Where("uuid = ?", qp.UUID).Scan(qp.Ctx)
+
+		res.Item = data
+
+		return res, err
 	}
 
-	q = sanitizeQuery(q.Model(&res.Roles), qp, coalesceCols, allowedSortFields)
+	var data []Role
+	q = sanitizeQuery(q.Model(&data), qp, coalesceCols, allowedSortFields)
 	res.Count, err = q.ScanAndCount(qp.Ctx)
+
+	for _, item := range data {
+		res.Items = append(res.Items, item)
+	}
+
 	return res, err
 }
 

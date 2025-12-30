@@ -47,10 +47,10 @@ func (c RolePermissionController) Read(ctx *gin.Context) {
 		return
 	}
 
-	data := gin.H{"total": res.Count, "data": res.RolePermissions}
+	data := gin.H{"total": res.Count, "data": res.Items}
 
 	if ctx.Param("uuid") != "all" {
-		data = gin.H{"data": res.RolePermission}
+		data = gin.H{"data": res.Item}
 	}
 
 	ctx.JSON(http.StatusOK, data)

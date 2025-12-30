@@ -9,12 +9,6 @@ import (
 )
 
 type (
-	UserResults struct {
-		User  User
-		Users []User
-		Count int
-	}
-
 	User struct {
 		bun.BaseModel `bun:"table:users,alias:u"`
 
@@ -73,7 +67,7 @@ func (m User) Upsert(ctx *gin.Context, item User) (int, User, error) {
 	return httpStatus, item, err
 }
 
-func (m User) Read(qp QueryParams) (res UserResults, err error) {
+func (m User) Read(qp QueryParams) (res Results, err error) {
 	var coalesceCols = []string{"username", "first_name", "middle_name", "last_name"}
 	var allowedSortFields = map[string]bool{"username": true, "email": true}
 
@@ -89,14 +83,22 @@ func (m User) Read(qp QueryParams) (res UserResults, err error) {
 			return sq.Where("u.uuid = ?", qp.UUID)
 		}, qp.Ctx, &userPerm)
 
-		res.User = userPerm.User
-		res.User.Permissions = userPerm.Permissions
+		item := userPerm.User
+		item.Permissions = userPerm.Permissions
+
+		res.Item = item
 
 		return res, err
 	}
 
-	q = sanitizeQuery(q.Model(&res.Users), qp, coalesceCols, allowedSortFields)
+	var data []User
+	q = sanitizeQuery(q.Model(&data), qp, coalesceCols, allowedSortFields)
 	res.Count, err = q.ScanAndCount(qp.Ctx)
+
+	for _, item := range data {
+		res.Items = append(res.Items, item)
+	}
+
 	return res, err
 }
 

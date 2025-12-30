@@ -47,10 +47,10 @@ func (c UserController) Read(ctx *gin.Context) {
 		return
 	}
 
-	data := gin.H{"total": res.Count, "data": res.Users}
+	data := gin.H{"total": res.Count, "data": res.Items}
 
 	if ctx.Param("uuid") != "all" {
-		data = gin.H{"data": res.User}
+		data = gin.H{"data": res.Item}
 	}
 
 	ctx.JSON(http.StatusOK, data)
