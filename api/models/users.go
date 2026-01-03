@@ -28,6 +28,8 @@ type (
 		IsOnline   bool            `bun:"is_online" json:"is_online"`
 
 		Permissions []string `bun:"-" json:"permissions,omitempty"`
+		Roles       []string `bun:"-" json:"roles,omitempty"`
+		Groups      []string `bun:"-" json:"groups,omitempty"`
 		AppModel
 	}
 )
@@ -77,6 +79,8 @@ func (m User) Read(qp QueryParams) (res Results, err error) {
 		var userPerm struct {
 			User
 			Permissions []string `bun:"permissions" json:"permissions"`
+			Roles       []string `bun:"roles" json:"roles"`
+			Groups      []string `bun:"groups" json:"groups"`
 		}
 
 		utils.GetPermissions(func(sq *bun.SelectQuery) *bun.SelectQuery {
@@ -85,6 +89,11 @@ func (m User) Read(qp QueryParams) (res Results, err error) {
 
 		item := userPerm.User
 		item.Permissions = userPerm.Permissions
+
+		if err := m.GetRolesGroups(qp, &userPerm); err == nil {
+			item.Roles = userPerm.Roles
+			item.Groups = userPerm.Groups
+		}
 
 		res.Item = item
 
@@ -114,4 +123,35 @@ func (m User) UpdateStatus(ctx *gin.Context, uuid string) (status, msg string, e
 
 	go auditLog(ctx, nil, map[string]string{"status": status}, id, "user", "PATCH", err)
 	return
+}
+
+func (m User) GetRolesGroups(qp QueryParams, dest ...any) error {
+	q := db.NewSelect().
+		With("RolesGroups", m.rolesGroupsUnion()).
+		TableExpr("users AS u").
+		ColumnExpr("JSON_ARRAYAGG(rg.role_name) AS roles").
+		ColumnExpr("JSON_ARRAYAGG(rg.group_name) AS groups").
+		Join(`LEFT JOIN "RolesGroups" rg ON rg.user_id = u.id`).
+		WhereGroup("AND", func(sq *bun.SelectQuery) *bun.SelectQuery {
+			return sq.Where("u.uuid = ?", qp.UUID).
+				Where("u.status = 'O'").
+				Where("u.deleted_at IS NULL")
+		}).
+		Group("u.id")
+
+	return q.Scan(qp.Ctx, &dest)
+}
+
+func (m User) rolesGroupsUnion() *bun.SelectQuery {
+	rolesQuery := db.NewSelect().TableExpr("users AS u").
+		ColumnExpr("u.id AS user_id, r.name AS role_name, NULL AS group_name").
+		Join("LEFT JOIN user_roles ur ON ur.user_id = u.id AND ur.deleted_at IS NULL AND ur.status = 'O'").
+		Join("LEFT JOIN roles r ON r.id = ur.role_id")
+
+	groupsQuery := db.NewSelect().TableExpr("users AS u").
+		ColumnExpr("u.id AS user_id, NULL AS role_name, g.name AS group_name").
+		Join("LEFT JOIN user_groups ug ON ug.user_id = u.id AND ug.deleted_at IS NULL AND ug.status = 'O'").
+		Join("LEFT JOIN groups g on g.id = ug.group_id")
+
+	return rolesQuery.Union(groupsQuery)
 }
